@@ -1,0 +1,43 @@
+program MyProject;
+var
+valeur_conversion : word ;//2 octets car le resultat de conversion est sur 10 bits
+variable_calcul : real ; // 4 octets pour le calcul pour ne pas avoir un
+                          // dépassement de taille lors de la multiplication
+temperature : byte; // 1 octet car la température est comprise entre 2 et 150
+valeur_afichage : string[3]; //chaine de 3 caractères pour afficher la température
+// Connections de l'LCD
+    LCD_RS : sbit at portc.0;   //lcd_rs affectuer a portc.0
+    LCD_EN : sbit at portc.1; //lcd enable a port c.1
+    LCD_D4 : sbit at portc.2;        // d4   affectuer a portc.2
+    LCD_D5 : sbit at portc.3;       // d5  affectuer a portc.2
+    LCD_D6 : sbit at portc.4;       // d6  affectuer a portc.2
+    LCD_D7 : sbit at portc.5;        // d7  affectuer a portc.2
+     //configurer les port
+    LCD_RS_Direction : sbit at TRISC.0;    //configurer  Register Select line signifie (data/instruction) signal pin
+    LCD_EN_Direction : sbit at TRISC.1;     // confi Enable line.                     //
+    LCD_D4_Direction : sbit at TRISC.2;
+    LCD_D5_Direction : sbit at TRISC.3;
+    LCD_D6_Direction : sbit at TRISC.4;
+    LCD_D7_Direction : sbit at TRISC.5;
+
+begin
+lcd_init(); // initialisation de l'LCD
+lcd_cmd(_LCD_CURSOR_OFF); // desactivation du curseur de l'LCD
+lcd_out(1,1,'T=');        // préparation de l'affichage
+adcon1:=%10000100 ;       // choix de RA0/AN0 en tant que entrée analogique
+adc_init();               // initialisation du module Adc CAN
+while true do                   // tantque vrai
+   begin                                                   // on commance
+   valeur_conversion := adc_read(0);          // Lire la valeur analogique du canal 0 et on le mettre dans valeur_conversion (voltage)
+   variable_calcul  := (valeur_conversion * 500)/1023 ;     ////En appliquant la règle de 3 on obtient : T (°C) = (N*500)/1023 signifie  0,489=500/1023
+
+  temperature:= byte(variable_calcul );
+  byteToStr(temperature,valeur_afichage);  // conversion de la distance calculée
+                                         // en texte
+  lcd_out(1,3,valeur_afichage);   // affichage de la distance calculé en mm
+  lcd_chr(1,6,%11011111);         // affichage du symbole degré: °
+  lcd_chr(1,7,'C');               // affichage de C pour Celsius
+  delay_ms(500);                  // attente de 500ms puis rafraichissement de
+                                // l'affichage
+  end;                               //fin begin
+end.                                      // fin program
